@@ -43,11 +43,16 @@ the Terraform deployment support is ready for new JSON manifests.
 | Directory | Content | Deployment |
 | --- | --- | --- |
 | `content/analytics-rules/` | Scheduled and NRT analytic rules | Sentinel alert-rule API |
+| `content/deferred-analytics-rules/` | Rules awaiting source tables or connectors | Not discovered by Terraform |
 | `content/automation-rules/` | Automation rule JSON manifests | Sentinel automation-rule API |
 | `content/hunting-queries/` | KQL hunting queries | Log Analytics saved searches |
 | `content/parsers/` | KQL workspace functions | Log Analytics saved searches |
 | `content/playbooks/` | Logic App templates and definitions | ARM deployments and Logic App API |
 | `content/workbooks/` | Workbook JSON | Workbook API |
+
+Rules in `content/deferred-analytics-rules/` are retained in source control but
+are not deployed. Move a rule to `content/analytics-rules/` after its required
+data source is available and the query has been validated.
 
 The migration copies content assets, not the source repository's deployment
 scripts, Codeless Connector Framework, test data, or Microsoft Defender XDR

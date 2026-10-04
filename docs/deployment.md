@@ -50,6 +50,7 @@ Terraform discovers files under `content/` and manages these resources:
 | Content directory | Azure resource |
 | --- | --- |
 | `content/analytics-rules/` | Microsoft Sentinel alert rules, scheduled and NRT |
+| `content/deferred-analytics-rules/` | Deferred rules retained in source control; not deployed |
 | `content/automation-rules/` | Microsoft Sentinel automation rules |
 | `content/hunting-queries/` | Log Analytics saved searches |
 | `content/parsers/` | Log Analytics saved searches configured as functions |
@@ -60,6 +61,9 @@ Automation rule support is ready for new JSON definitions, but the source
 repository did not include automation rule manifests. Playbooks are opt-in and
 are not deployed unless named in `ENABLED_PLAYBOOKS`. Configure their connector
 connections, external permissions, and secure parameters before enabling them.
+Rules in `content/deferred-analytics-rules/` are not loaded by Terraform. Move a
+rule back to `content/analytics-rules/` only after its required data source is
+available and its query has been validated.
 
 ## Current rollout status
 
@@ -76,15 +80,14 @@ or query references. After Workbook Contributor was assigned at the target
 resource group, a targeted apply succeeded: it added four workbooks and updated
 two analytic rules, with no deletions.
 
-A later full apply failed when Azure rejected analytics rules with invalid
-ATT&CK techniques, placeholder tactics and entity-mapping columns, KQL errors,
-and references to unavailable tables or columns. The workflow recorded
-completion of updates for four workbooks and two rules before failing. A fresh
-plan still reports 18 additions, nine in-place changes, and no deletions:
-18 analytic-rule additions, five analytic-rule updates, and four workbook
-updates. Review the latest plan and repair rejected rule definitions before
-another apply. Keep the deployment gate disabled except during an explicitly
-approved apply.
+A later full apply partially deployed content before Azure rejected analytics
+rules for invalid metadata and KQL, including a reference to the unavailable
+`GWorkspaceActivityReports` table. The Google Workspace rule is retained under
+`content/deferred-analytics-rules/` until that data source is available. The
+latest plan-only run before deferring it reported four additions, six
+in-place changes, and no deletions; a new plan is required after the deferral.
+Review that plan before any further apply. Keep the deployment gate disabled
+except during an explicitly approved apply.
 
 ## First-time setup
 
