@@ -26,7 +26,8 @@ techniques:
   - T1621
 query: |-
   // Define a list of exclusions (service accounts, expected behaviors, etc.)
-  let includedUsers = _GetWatchlist('EntraRiskyUsers') | project UserPrincipalName;
+  let includedUsers = _GetWatchlist('EntraRiskyUsers')
+      | project SearchKey = tostring(SearchKey);
   // Main detection query
   let SigninEvents = union isfuzzy=true
       (SigninLogs
@@ -42,7 +43,7 @@ query: |-
   SigninEvents
   | where TimeGenerated > ago(1h)
   | where UserPrincipalName in (includedUsers)
-  | where TokenProtection has "unbound" and TokenProtection has "1002"
+  | where TokenProtection contains "unbound" and TokenProtection contains "1002"
   | extend DeviceDetail = parse_json(DeviceDetailValue)
   , LocationDetails = parse_json(LocationDetailsValue)
   | extend

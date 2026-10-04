@@ -13,6 +13,7 @@ triggerThreshold: 0
 tactics:
   - Execution
   - LateralMovement
+  - CommandAndControl
 relevantTechniques:
   - T1059
   - T1071

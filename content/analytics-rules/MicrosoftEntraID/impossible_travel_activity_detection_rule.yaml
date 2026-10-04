@@ -45,7 +45,7 @@ query: |
   );
   // Uncomment where Watchlist exists in environment!!!!!!
   //let TrustedIPLocations = materialize(_GetWatchlist('environmentIPs') | project IPAddress);
-  let CountryLookup = materialize(_GetWatchlist('regionalMap') | project Region = SearchKey, Country = name);
+  let CountryLookup = materialize(_GetWatchlist('regionalMap') | project Region = SearchKey, Country = tostring(column_ifexists("name", SearchKey)));
   let HighRiskCountries = dynamic(["Brazil", "China", "Cuba", "Cyprus", "Egypt", "Equatorial Guinea", "Eritrea", "Haiti"
       , "Indonesia", "Iran", "Iraq", "Israel", "Kosovo", "Liberia", "Libya", "Malaysia", "Myanmar", "Nicaragua", "Nigeria"
       , "North Korea", "Paraguay", "Russia", "Russian Federation", "Sudan", "Switzerland", "Syria", "Thailand", "Turkmenistan"
