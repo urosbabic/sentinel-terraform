@@ -37,6 +37,12 @@ When enabled, pushes to `main` automatically apply the saved Terraform plan.
 Manual runs default to dry-run. Applying a manual plan requires both the
 deployment gate and `dry_run=false`.
 
+Manual runs can optionally receive `terraform_targets` as a JSON array of
+Terraform resource addresses. This creates and, when applying, applies a
+targeted plan containing only those addresses and their dependencies. Use
+targeting only for an intentional partial rollout or recovery. Follow it with
+a full plan to review all remaining changes.
+
 ## Managed content
 
 Terraform discovers files under `content/` and manages these resources:
@@ -63,12 +69,20 @@ enabled, the bootstrap state has been migrated to Azure Storage, and the three
 GitHub `TF_STATE_*` variables are configured. Temporary operator Blob Data
 access was removed after the migration.
 
-Sentinel content deployment remains disabled. An isolated local plan with an
-empty state predicts 111 additions and no changes or deletions. A read-only
-inventory confirmed that 50 of the 68 analytic-rule IDs already exist in
-`Sentinel-LAW`, 18 are absent, and the workspace contains 40 saved searches.
-`terraform/imports.tf` prepares imports for the 50 existing analytic rules.
-Review the remote plan for drift and remaining creates before applying.
+The first remote apply partially deployed content and imported the 50 existing
+analytic rules. It created the hunting queries and parsers, and applied valid
+rule changes before Azure rejected 21 analytic-rule operations for invalid
+metadata, entity mappings, or query references. Workbook creation failed
+because the deployment identity lacked workbook write permission. Workbook
+Contributor has since been assigned at the target resource group; its
+effectiveness still needs verification by a deployment run.
+
+The latest remote plan reports 22 additions, five changes, and no deletions:
+18 analytic-rule additions, five analytic-rule changes, and four workbooks.
+Two rule changes were not among the rejected operations. Use `terraform_targets`
+for a targeted manual plan of the four workbooks and those two rule changes.
+The rejected rules remain in the content repository for later repair. Keep the
+deployment gate disabled except during an explicitly approved apply.
 
 ## First-time setup
 
@@ -101,7 +115,8 @@ these values even when variables are marked sensitive. Keep the state backend
 private and restrict access to it.
 
 The deployment identity requires Microsoft Sentinel Contributor on the
-workspace and Storage Blob Data Contributor on the state container. Grant
+workspace, Workbook Contributor on the resource group when deploying
+workbooks, and Storage Blob Data Contributor on the state container. Grant
 Logic Apps Contributor on the resource group only when playbooks need
 deployment. Review any additional permissions required by a playbook
 separately.

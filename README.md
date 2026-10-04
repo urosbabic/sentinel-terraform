@@ -84,6 +84,7 @@ before enabling it.
   environment
 * A private Azure Storage blob container for remote Terraform state
 * Microsoft Sentinel Contributor on the target workspace
+* Workbook Contributor on the target resource group when deploying workbooks
 * Storage Blob Data Contributor on the state container
 * Logic Apps Contributor on the target resource group if deploying playbooks
 
@@ -128,15 +129,19 @@ backend. GitHub repository variables for the state resource group, account,
 and container are configured. Temporary operator access to the state
 container was removed after migration.
 
-Sentinel content has **not** been deployed. The current content plan predicts
-111 resources to add in an empty local state, with no changes or deletions.
-Several source workbooks referenced another tenant's workspace and were
-adapted to the configured `Sentinel-LAW` workspace. A read-only inventory
-confirmed 50 of 68 analytic-rule IDs already exist, 18 are absent, and the
-workspace contains 40 saved searches. Import declarations are prepared for
-those 50 rules. Run the manual plan on `main` with `dry_run=true` to review
-imports, drift, and remaining creates. The deployment gate remains disabled,
-so this manual run cannot apply content.
+The first remote apply partially deployed content and imported the 50 existing
+analytic rules. It created the hunting queries and parsers, and applied valid
+rule changes before Azure rejected 21 analytic-rule operations for invalid
+metadata, entity mappings, or query references. Workbook creation also failed
+because the deployment identity lacked workbook write permission; that role
+has since been assigned but still needs verification by a deployment run.
+
+The latest remote plan reports 22 additions, five changes, and no deletions:
+18 analytic-rule additions, five analytic-rule changes, and four workbooks.
+Two rule changes were not among the rejected operations. A targeted manual
+plan can deploy the four workbooks and those two rule changes while leaving
+the rejected rules for later repair. The deployment gate remains disabled
+unless temporarily enabled for an explicitly approved apply.
 
 ## Bootstrap the state backend
 

@@ -24,6 +24,11 @@ on:
         required: true
         default: true
         type: boolean
+      terraform_targets:
+        description: "Optional JSON array of Terraform resource addresses for a targeted plan"
+        required: false
+        default: "[]"
+        type: string
 
 permissions:
   contents: read
@@ -108,7 +113,21 @@ jobs:
 
       - name: Create Terraform plan
         working-directory: terraform
-        run: terraform plan -input=false -no-color -out=sentinel.tfplan
+        env:
+          TERRAFORM_TARGETS: ${{ inputs.terraform_targets || '[]' }}
+        run: |
+          if ! jq -e 'type == "array" and all(.[]; type == "string" and length > 0)' <<< "$TERRAFORM_TARGETS" >/dev/null; then
+            echo "terraform_targets must be a JSON array of Terraform resource addresses."
+            exit 1
+          fi
+
+          mapfile -t targets < <(jq -r '.[]' <<< "$TERRAFORM_TARGETS")
+          target_args=()
+          for target in "${targets[@]}"; do
+            target_args+=("-target=$target")
+          done
+
+          terraform plan -input=false -no-color -out=sentinel.tfplan "${target_args[@]}"
 
       - name: Apply Terraform plan
         if: >-
