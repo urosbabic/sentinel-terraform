@@ -130,18 +130,19 @@ and container are configured. Temporary operator access to the state
 container was removed after migration.
 
 The first remote apply partially deployed content and imported the 50 existing
-analytic rules. It created the hunting queries and parsers, and applied valid
-rule changes before Azure rejected 21 analytic-rule operations for invalid
-metadata, entity mappings, or query references. Workbook creation also failed
-because the deployment identity lacked workbook write permission; that role
-has since been assigned but still needs verification by a deployment run.
+analytic rules. It created the hunting queries and parsers, and Azure rejected
+some analytic-rule operations for invalid metadata, entity mappings, or query
+references. After assigning Workbook Contributor, a targeted apply succeeded:
+it added four workbooks and updated two analytic rules, with no deletions.
 
-The latest remote plan reports 22 additions, five changes, and no deletions:
-18 analytic-rule additions, five analytic-rule changes, and four workbooks.
-Two rule changes were not among the rejected operations. A targeted manual
-plan can deploy the four workbooks and those two rule changes while leaving
-the rejected rules for later repair. The deployment gate remains disabled
-unless temporarily enabled for an explicitly approved apply.
+A later full apply failed when Azure rejected analytics rules with invalid
+ATT&CK techniques, placeholder tactics and entity-mapping columns, KQL errors,
+and references to unavailable tables or columns. The workflow recorded
+completion of updates for four workbooks and two rules before failing. A fresh
+plan still reports 18 additions, nine in-place changes, and no deletions:
+18 analytic-rule additions, five analytic-rule updates, and four workbook
+updates. Review the latest plan and repair rejected rule definitions before
+another apply. The deployment gate is disabled.
 
 ## Bootstrap the state backend
 

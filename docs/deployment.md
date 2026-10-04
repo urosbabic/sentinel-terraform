@@ -70,19 +70,21 @@ GitHub `TF_STATE_*` variables are configured. Temporary operator Blob Data
 access was removed after the migration.
 
 The first remote apply partially deployed content and imported the 50 existing
-analytic rules. It created the hunting queries and parsers, and applied valid
-rule changes before Azure rejected 21 analytic-rule operations for invalid
-metadata, entity mappings, or query references. Workbook creation failed
-because the deployment identity lacked workbook write permission. Workbook
-Contributor has since been assigned at the target resource group; its
-effectiveness still needs verification by a deployment run.
+analytic rules. It created the hunting queries and parsers, while Azure
+rejected some analytic-rule operations for invalid metadata, entity mappings,
+or query references. After Workbook Contributor was assigned at the target
+resource group, a targeted apply succeeded: it added four workbooks and updated
+two analytic rules, with no deletions.
 
-The latest remote plan reports 22 additions, five changes, and no deletions:
-18 analytic-rule additions, five analytic-rule changes, and four workbooks.
-Two rule changes were not among the rejected operations. Use `terraform_targets`
-for a targeted manual plan of the four workbooks and those two rule changes.
-The rejected rules remain in the content repository for later repair. Keep the
-deployment gate disabled except during an explicitly approved apply.
+A later full apply failed when Azure rejected analytics rules with invalid
+ATT&CK techniques, placeholder tactics and entity-mapping columns, KQL errors,
+and references to unavailable tables or columns. The workflow recorded
+completion of updates for four workbooks and two rules before failing. A fresh
+plan still reports 18 additions, nine in-place changes, and no deletions:
+18 analytic-rule additions, five analytic-rule updates, and four workbook
+updates. Review the latest plan and repair rejected rule definitions before
+another apply. Keep the deployment gate disabled except during an explicitly
+approved apply.
 
 ## First-time setup
 
