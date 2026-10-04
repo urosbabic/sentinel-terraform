@@ -33,7 +33,7 @@ Add these repository or `production` environment variables:
 | Variable | Purpose |
 | --- | --- |
 | `AZURE_CLIENT_ID` | Entra application (client) ID used for OIDC |
-| `AZURE_TENANT_ID` | Entra tenant ID |
+| `AZURE_TENANT_ID` | SoftwareOne tenant ID: `83a97caa-ea6c-4849-8077-441cd6e3c0dc` |
 | `AZURE_SUBSCRIPTION_ID` | Subscription containing the workspace and state account |
 | `SENTINEL_RESOURCE_GROUP` | Resource group containing the Sentinel workspace |
 | `SENTINEL_WORKSPACE_NAME` | Log Analytics workspace name |
