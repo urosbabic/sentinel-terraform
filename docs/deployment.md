@@ -84,10 +84,11 @@ A later full apply partially deployed content before Azure rejected analytics
 rules for invalid metadata and KQL, including a reference to the unavailable
 `GWorkspaceActivityReports` table. The Google Workspace rule is retained under
 `content/deferred-analytics-rules/` until that data source is available. The
-latest plan-only run before deferring it reported four additions, six
-in-place changes, and no deletions; a new plan is required after the deferral.
-Review that plan before any further apply. Keep the deployment gate disabled
-except during an explicitly approved apply.
+latest plan-only run after deferring the rule reported three additions,
+six in-place changes, and no deletions
+([run 37227819875](https://github.com/urosbabic/sentinel-terraform/actions/runs/37227819875)).
+The apply step was skipped. Review the plan before any further apply, and keep
+the deployment gate disabled except during an explicitly approved apply.
 
 ## First-time setup
 
