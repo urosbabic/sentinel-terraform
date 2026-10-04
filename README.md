@@ -20,8 +20,9 @@ flowchart LR
     Validate --> Review["Review changes and deployment plan"]
     Review --> Main["Merge to main"]
     Main --> Gate{"Deployment enabled?"}
-    Gate -->|No| Stop["No Azure changes"]
+    Gate -->|No| Stop["Push validation only"]
     Gate -->|Yes| OIDC["GitHub Actions OIDC"]
+    Manual["Manual plan on main, dry_run=true"] --> OIDC
     OIDC --> Plan["Terraform plan"]
     Plan --> Apply["Apply reviewed plan"]
     State[("Private Azure Storage state")] <--> Plan
@@ -56,8 +57,10 @@ custom detections. Those assets require separate deployment models.
 
 The existing Azure workspace may already contain content from the source
 repository. A new Terraform state will plan to create every migrated resource.
-Import content that is already deployed before applying, and review the full
-plan for duplicates or resource changes.
+The current inventory confirmed 50 existing analytic rules and 18 absent
+rules. Import declarations cover those 50 rules; review the remote plan for
+drift before applying. Other content types still need comparison against the
+target workspace.
 
 Playbooks are opt-in. Add their directory names to `enabled_playbooks` only
 after providing required ARM parameters or managed API connections and
@@ -126,11 +129,14 @@ and container are configured. Temporary operator access to the state
 container was removed after migration.
 
 Sentinel content has **not** been deployed. The current content plan predicts
-111 resources to add, with no changes or deletions. Several source workbooks
-referenced another tenant's workspace and were adapted to the configured
-`Sentinel-LAW` workspace. Inventory and import any existing target content,
-review the complete plan, and confirm the intended creates before enabling
-`ENABLE_SENTINEL_DEPLOYMENT`. The deployment gate remains disabled.
+111 resources to add in an empty local state, with no changes or deletions.
+Several source workbooks referenced another tenant's workspace and were
+adapted to the configured `Sentinel-LAW` workspace. A read-only inventory
+confirmed 50 of 68 analytic-rule IDs already exist, 18 are absent, and the
+workspace contains 40 saved searches. Import declarations are prepared for
+those 50 rules. Run the manual plan on `main` with `dry_run=true` to review
+imports, drift, and remaining creates. The deployment gate remains disabled,
+so this manual run cannot apply content.
 
 ## Bootstrap the state backend
 

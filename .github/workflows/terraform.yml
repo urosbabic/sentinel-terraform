@@ -63,9 +63,12 @@ jobs:
   deploy:
     name: Plan and optionally apply Sentinel content
     if: >-
-      vars.ENABLE_SENTINEL_DEPLOYMENT == 'true' &&
-      (github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main'))
+      github.ref == 'refs/heads/main' &&
+      (
+        (github.event_name == 'workflow_dispatch' && inputs.dry_run == true) ||
+        (vars.ENABLE_SENTINEL_DEPLOYMENT == 'true' &&
+        (github.event_name == 'workflow_dispatch' || github.event_name == 'push'))
+      )
     needs: validate
     runs-on: ubuntu-24.04
     environment: production
@@ -108,6 +111,11 @@ jobs:
         run: terraform plan -input=false -no-color -out=sentinel.tfplan
 
       - name: Apply Terraform plan
-        if: github.event_name == 'push' || inputs.dry_run == false
+        if: >-
+          vars.ENABLE_SENTINEL_DEPLOYMENT == 'true' &&
+          (
+            (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+            (github.event_name == 'workflow_dispatch' && inputs.dry_run == false)
+          )
         working-directory: terraform
         run: terraform apply -input=false -auto-approve sentinel.tfplan

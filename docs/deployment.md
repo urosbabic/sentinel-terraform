@@ -12,8 +12,9 @@ flowchart TB
     Validate --> Approve["Review change and Azure plan"]
     Approve --> Merge["Merge to main"]
     Merge --> Enabled{"ENABLE_SENTINEL_DEPLOYMENT is true?"}
-    Enabled -->|No| Disabled["Validation only, no Azure login"]
+    Enabled -->|No| Disabled["Push validation only"]
     Enabled -->|Yes| Environment["Protected production environment"]
+    Manual["Manual plan on main, dry_run=true"] --> Environment
     Environment --> Token["GitHub OIDC token"]
     Token --> Entra["Entra federated credential"]
     Entra --> Azure["Azure access using scoped RBAC"]
@@ -28,13 +29,13 @@ flowchart TB
 ```
 
 Pull requests validate formatting and both Terraform configurations without
-Azure credentials. The deployment job runs only on pushes to `main` or manual
-workflow runs, and receives an OIDC token only inside the protected
-`production` environment.
+Azure credentials. A manual workflow run on `main` with `dry_run=true` can
+create a remote plan while the deployment gate remains disabled. The deployment
+job receives an OIDC token only inside the protected `production` environment.
 
 When enabled, pushes to `main` automatically apply the saved Terraform plan.
-A manual run defaults to dry-run: it creates and displays a plan but does not
-apply it. Set the `dry_run` input to `false` only after reviewing the plan.
+Manual runs default to dry-run. Applying a manual plan requires both the
+deployment gate and `dry_run=false`.
 
 ## Managed content
 
@@ -62,11 +63,12 @@ enabled, the bootstrap state has been migrated to Azure Storage, and the three
 GitHub `TF_STATE_*` variables are configured. Temporary operator Blob Data
 access was removed after the migration.
 
-Sentinel content deployment remains disabled. A current local plan predicts
-111 resources to add and no changes or deletions. This is a pre-deployment
-plan, not proof that those resources are absent from the target workspace.
-Inventory the workspace and import matching resources before enabling the
-deployment gate.
+Sentinel content deployment remains disabled. An isolated local plan with an
+empty state predicts 111 additions and no changes or deletions. A read-only
+inventory confirmed that 50 of the 68 analytic-rule IDs already exist in
+`Sentinel-LAW`, 18 are absent, and the workspace contains 40 saved searches.
+`terraform/imports.tf` prepares imports for the 50 existing analytic rules.
+Review the remote plan for drift and remaining creates before applying.
 
 ## First-time setup
 
@@ -155,11 +157,13 @@ terraform -chdir=terraform init `
 
 ### 3. Inventory and import existing content
 
-Before enabling deployment, inventory the target workspace and compare it with
-the files in `content/`. A fresh Terraform state considers every discovered
-file to be new. Import resources already present in Azure into the matching
-Terraform addresses before applying; otherwise Terraform can attempt duplicate
-creates or fail because a resource name already exists.
+Before applying, inventory the target workspace and compare it with the files
+in `content/`. A fresh Terraform state considers every discovered file to be
+new. Import resources already present in Azure into the matching Terraform
+addresses before applying; otherwise Terraform can attempt duplicate creates
+or overwrite existing configuration. `terraform/imports.tf` prepares imports
+for the 50 analytic rules confirmed in the current target workspace. Keep this
+environment-specific file until those imports are applied, then remove it.
 
 Use each resource's exact Azure resource ID and the Terraform address generated
 from its relative content path. For example, the analytic rule address is
@@ -189,10 +193,12 @@ pull request and review the content, formatting, and validation results. Once
 existing resources have been imported and the expected Terraform plan has been
 reviewed, enable deployment and merge the approved change to `main`.
 
-For a plan without applying, start the GitHub Actions workflow manually and
-leave `dry_run` set to `true`. To apply a reviewed manual plan, set `dry_run`
-to `false`. Once the gate is enabled, a push to `main` applies the generated
-plan automatically, so protect the branch and require pull request reviews.
+For a plan without applying, start the GitHub Actions workflow manually on
+`main` and leave `dry_run` set to `true`. This plan-only path works while the
+deployment gate is disabled. To apply a reviewed manual plan, enable the gate
+and set `dry_run` to `false`. Once the gate is enabled, a push to `main`
+applies the generated plan automatically, so protect the branch and require
+pull request reviews.
 
 ## Local validation
 

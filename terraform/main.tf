@@ -176,7 +176,7 @@ resource "azapi_resource" "hunting_query" {
       category    = "Hunting Queries"
       displayName = each.value.display_name
       query       = each.value.query
-      version     = 1
+      version     = 2
     }
   }
 }
@@ -190,12 +190,12 @@ resource "azapi_resource" "parser" {
 
   body = {
     properties = {
-      category           = "Parsers"
+      category           = "Microsoft Sentinel Parser"
       displayName        = each.value.display_name
       functionAlias      = each.value.function_alias
       functionParameters = ""
       query              = each.value.query
-      version            = 1
+      version            = 2
     }
   }
 }
