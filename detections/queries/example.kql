@@ -1,5 +1,0 @@
-// Replace this sample with a query that matches the tables available in your workspace.
-SigninLogs
-| where ResultType != "0"
-| summarize FailedSignIns = count() by UserPrincipalName, bin(TimeGenerated, 5m)
-| where FailedSignIns >= 5

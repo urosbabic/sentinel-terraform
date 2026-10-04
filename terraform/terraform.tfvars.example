@@ -1,2 +1,2 @@
-resource_group_name = "rg-sentinel-prod"
-workspace_name      = "law-sentinel-prod"
+resource_group_name = "Sentinel-RG"
+workspace_name      = "Sentinel-LAW"

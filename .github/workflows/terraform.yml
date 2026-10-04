@@ -5,17 +5,25 @@ on:
     branches:
       - main
     paths:
-      - "detections/**"
+      - "content/**"
+      - "bootstrap/**"
       - "terraform/**"
       - ".github/workflows/terraform.yml"
   push:
     branches:
       - main
     paths:
-      - "detections/**"
+      - "content/**"
+      - "bootstrap/**"
       - "terraform/**"
       - ".github/workflows/terraform.yml"
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Create a plan without applying it"
+        required: true
+        default: true
+        type: boolean
 
 permissions:
   contents: read
@@ -34,7 +42,7 @@ jobs:
           terraform_version: 1.16.5
 
       - name: Check formatting
-        run: terraform fmt -check -recursive terraform
+        run: terraform fmt -check -recursive .
 
       - name: Initialize without backend
         working-directory: terraform
@@ -44,8 +52,16 @@ jobs:
         working-directory: terraform
         run: terraform validate -no-color
 
+      - name: Initialize bootstrap without backend
+        working-directory: bootstrap
+        run: terraform init -backend=false -input=false
+
+      - name: Validate bootstrap configuration
+        working-directory: bootstrap
+        run: terraform validate -no-color
+
   deploy:
-    name: Plan and apply to Sentinel
+    name: Plan and optionally apply Sentinel content
     if: >-
       vars.ENABLE_SENTINEL_DEPLOYMENT == 'true' &&
       (github.event_name == 'workflow_dispatch' ||
@@ -64,6 +80,9 @@ jobs:
       TF_IN_AUTOMATION: "true"
       TF_VAR_resource_group_name: ${{ vars.SENTINEL_RESOURCE_GROUP }}
       TF_VAR_workspace_name: ${{ vars.SENTINEL_WORKSPACE_NAME }}
+      TF_VAR_enabled_playbooks: ${{ vars.ENABLED_PLAYBOOKS || '[]' }}
+      TF_VAR_playbook_parameters: ${{ secrets.PLAYBOOK_PARAMETERS_JSON || '{}' }}
+      TF_VAR_playbook_connections: ${{ secrets.PLAYBOOK_CONNECTIONS_JSON || '{}' }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
@@ -89,5 +108,6 @@ jobs:
         run: terraform plan -input=false -no-color -out=sentinel.tfplan
 
       - name: Apply Terraform plan
+        if: github.event_name == 'push' || inputs.dry_run == false
         working-directory: terraform
         run: terraform apply -input=false -auto-approve sentinel.tfplan

@@ -5,6 +5,8 @@
 *.tfplan.*
 *.tfvars
 !*.tfvars.example
+bootstrap/.terraform/
+terraform/.terraform/
 override.tf
 override.tf.json
 *_override.tf
