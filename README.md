@@ -42,10 +42,12 @@ Add these repository or `production` environment variables:
 | `TF_STATE_CONTAINER` | Existing blob container for Terraform state |
 | `ENABLE_SENTINEL_DEPLOYMENT` | Set to `true` after configuring and reviewing the deployment |
 
-Create a federated identity credential with issuer
-`https://token.actions.githubusercontent.com`, audience
+The single-tenant Entra application `GitHub Actions - sentinel-terraform` is
+registered in the SoftwareOne tenant. Its federated credential is configured
+with issuer `https://token.actions.githubusercontent.com`, audience
 `api://AzureADTokenExchange`, and subject
-`repo:urosbabic/sentinel-terraform:environment:production`.
+`repo:urosbabic/sentinel-terraform:environment:production`. No client secret is
+used.
 
 Restrict the `production` environment to the `main` branch. Add required
 reviewers if deployments need manual approval. The workflow grants Azure OIDC
