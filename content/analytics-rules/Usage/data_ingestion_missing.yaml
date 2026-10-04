@@ -55,11 +55,6 @@ query: |
           ) 
   | order by abs(['Size Change %']) desc
   | where LastWeekSize > 0 and ThisWeekSize == 0
-entityMappings:
-  - entityType: Account
-    fieldMappings:
-      - identifier: FullName
-        columnName: YourColumnName
 incidentConfiguration:
   createIncident: true
   groupingConfiguration:

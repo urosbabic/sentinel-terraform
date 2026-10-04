@@ -19,7 +19,6 @@ tactics:
   - Persistence
 relevantTechniques:
   - T1078
-  - T109888
 query: |
   let timeframe = 1d;
   let trustedIPs = _GetWatchlist('environmentIPs') | project IPAddress = tostring(SearchKey); 

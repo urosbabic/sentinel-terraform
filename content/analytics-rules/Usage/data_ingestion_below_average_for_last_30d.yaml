@@ -31,11 +31,6 @@ query: |
   | extend PercentageBelowAverage = iif(LastWeekSize < averageIngestionLast30Days, round((LastWeekSize / averageIngestionLast30Days) * 100, 2), 0.0)
   | project DataType, LastWeekSize, PercentageBelowAverage
   | where PercentageBelowAverage > 0
-entityMappings:
-  - entityType: Account
-    fieldMappings:
-      - identifier: FullName
-        columnName: YourColumnName
 incidentConfiguration:
   createIncident: true
   groupingConfiguration:

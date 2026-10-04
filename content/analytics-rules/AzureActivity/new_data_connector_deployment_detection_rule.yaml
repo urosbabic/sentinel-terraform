@@ -23,7 +23,7 @@ query: |
       and ResourceGroup == SentinelRG
   | extend DataConnector = tostring(split(tostring(parse_json(Properties).entity), "/")[12])
   | extend RBACRole = tostring(parse_json(tostring(Authorization_d.evidence)).role)
-  | summarize DataConnectors = make_set(DataConnector) by format_datetime(bin(TimeGenerated, 1d), "dd/MM/yyyy") , Caller, RBACRole, CallerIpAddress-
+  | summarize DataConnectors = make_set(DataConnector) by format_datetime(bin(TimeGenerated, 1d), "dd/MM/yyyy") , Caller, RBACRole, CallerIpAddress
 entityMappings:
   - entityType: Account
     fieldMappings:

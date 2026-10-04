@@ -19,13 +19,15 @@ relevantTechniques:
   - T1589
   - T1078
 query: |
-  let breakGlassAccounts = _GetWatchlist('breakGlassAccounts') | summarize by UserPrincipalName, UserId;
+  let breakGlassAccounts = _GetWatchlist('breakGlassAccounts')
+      | project SearchKey = tostring(SearchKey)
+      | where isnotempty(SearchKey);
   SigninLogs
   | where UserId in (breakGlassAccounts)
       or UserPrincipalName in (breakGlassAccounts)
   | extend county = tostring(LocationDetails.state)
       , city = tostring(LocationDetails.city)
-  | summarize arg_max(TimeGenerated, 1m) 
+  | summarize arg_max(TimeGenerated, *)
       by UserPrincipalName
       , AppDisplayName
       , IPAddress
@@ -33,7 +35,6 @@ query: |
       , Region = Location
       , OS = tostring(DeviceDetail.operatingSystem)
       , Browser = tostring(DeviceDetail.browser)
-  | project-away max_TimeGenerated_arg1
   | project-reorder TimeGenerated
   | sort by TimeGenerated
 entityMappings:

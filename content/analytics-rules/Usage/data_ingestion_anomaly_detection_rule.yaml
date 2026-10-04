@@ -55,11 +55,6 @@ query: |
           ) 
   | order by abs(['Size Change %']) desc
   | where ['Size Change %'] > 50
-entityMappings:
-  - entityType: Account
-    fieldMappings:
-      - identifier: FullName
-        columnName: YourColumnName
 incidentConfiguration:
   createIncident: true
   groupingConfiguration:

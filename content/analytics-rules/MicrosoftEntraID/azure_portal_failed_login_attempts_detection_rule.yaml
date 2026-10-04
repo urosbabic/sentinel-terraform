@@ -19,10 +19,13 @@ tactics:
 relevantTechniques:
   - T1110
 query: |
+  let SigninEvents = union isfuzzy=true
+      (SigninLogs | extend ResultType = toint(ResultType))
+      , (AADNonInteractiveUserSignInLogs | extend ResultType = toint(ResultType));
   let timeFrame = 1d;
   let threshold = 5;
   // Successful sign-in check
-  let successfulLogins = UnifiedSignInLogs
+  let successfulLogins = SigninEvents
       | where TimeGenerated >= ago(90d)
           and ResultType == 0
       | summarize successCount = count() by IPAddress
@@ -30,7 +33,7 @@ query: |
       | project IPAddress
   ;
   // Check for failed logins to Azure Portal App
-  UnifiedSignInLogs
+  SigninEvents
   | where IPAddress !in(successfulLogins)
       and TimeGenerated > ago(timeFrame)
       and ResultType != 0

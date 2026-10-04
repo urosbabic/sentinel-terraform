@@ -22,17 +22,17 @@ relevantTechniques:
   - T1078
 query: |
   let breakGlassAccounts = _GetWatchlist('breakGlassAccounts')
-    | summarize by UserPrincipalName, UserId;
+    | project SearchKey = tostring(SearchKey)
+    | where isnotempty(SearchKey);
   SigninLogs
   | where UserId in (breakGlassAccounts)
       or UserPrincipalName in (breakGlassAccounts)
   | extend county = tostring(LocationDetails.state), 
       city = tostring(LocationDetails.city)
-  | summarize arg_max(TimeGenerated, 1m), Reuslts = count(ResultType != 0) by UserPrincipalName, ResultType, AppDisplayName, 
+  | summarize arg_max(TimeGenerated, *), FailureCount = countif(toint(ResultType) != 0) by UserPrincipalName, ResultType, AppDisplayName,
       IPAddress, City = city,Region = Location, OS = tostring(DeviceDetail.operatingSystem), Browser = tostring(DeviceDetail.browser)
-  | project-away max_TimeGenerated_arg1
   | project-reorder TimeGenerated
-  | where Reuslts >= 5
+  | where FailureCount >= 5
   | sort by TimeGenerated
 entityMappings:
   - entityType: Account

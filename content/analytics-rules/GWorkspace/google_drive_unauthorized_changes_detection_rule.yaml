@@ -10,8 +10,6 @@ queryFrequency: P1D
 queryPeriod: P1D
 triggerOperator: gt
 triggerThreshold: 0
-tactics:
-  - YourTactic
 query: |
   GWorkspaceActivityReports
   | where ActorKey != "SYSTEM"

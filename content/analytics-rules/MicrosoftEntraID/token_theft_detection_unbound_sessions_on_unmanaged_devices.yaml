@@ -28,10 +28,23 @@ query: |-
   // Define a list of exclusions (service accounts, expected behaviors, etc.)
   let includedUsers = _GetWatchlist('EntraRiskyUsers') | project UserPrincipalName;
   // Main detection query
-  UnifiedSignInLogs
+  let SigninEvents = union isfuzzy=true
+      (SigninLogs
+      | extend TokenProtection = tostring(TokenProtectionStatusDetails)
+      , DeviceDetailValue = tostring(DeviceDetail)
+      , LocationDetailsValue = tostring(LocationDetails)
+      | project-away TokenProtectionStatusDetails, DeviceDetail, LocationDetails)
+      , (AADNonInteractiveUserSignInLogs
+      | extend TokenProtection = tostring(TokenProtectionStatusDetails)
+      , DeviceDetailValue = tostring(DeviceDetail)
+      , LocationDetailsValue = tostring(LocationDetails)
+      | project-away TokenProtectionStatusDetails, DeviceDetail, LocationDetails);
+  SigninEvents
   | where TimeGenerated > ago(1h)
   | where UserPrincipalName in (includedUsers)
   | where TokenProtection has "unbound" and TokenProtection has "1002"
+  | extend DeviceDetail = parse_json(DeviceDetailValue)
+  , LocationDetails = parse_json(LocationDetailsValue)
   | extend
   DeviceId = tostring(DeviceDetail.deviceId),
   HostName = tostring(DeviceDetail.displayName),

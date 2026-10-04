@@ -20,6 +20,15 @@ tactics:
 relevantTechniques:
   - T1078
 query: |
+  let SigninEvents = union isfuzzy=true
+      (SigninLogs
+      | extend ResultType = toint(ResultType)
+      , LocationDetails = parse_json(tostring(LocationDetails))
+      , DeviceDetail = parse_json(tostring(DeviceDetail)))
+      , (AADNonInteractiveUserSignInLogs
+      | extend ResultType = toint(ResultType)
+      , LocationDetails = parse_json(tostring(LocationDetails))
+      , DeviceDetail = parse_json(tostring(DeviceDetail)));
   let MaxSetSize = 5;
   let AzureRanges = 
     externaldata(changeNumber: string, cloud: string, values: dynamic)
@@ -27,12 +36,12 @@ query: |
     | mv-expand values
     | extend Name = values.name, AddressPrefixes = tostring(values.properties.addressPrefixes);
   let ExcludedKnownLocations = 
-    UnifiedSignInLogs
+    SigninEvents
     | where TimeGenerated between (ago(14d)..ago(1d))
     | where ResultType == 0
     | summarize by Location;
   let MatchedLocations = 
-    materialize(UnifiedSignInLogs
+    materialize(SigninEvents
     | where TimeGenerated > ago(1h)
     | where ResultType !in (50126, 50053, 50074, 70044)
     | where Location !in (ExcludedKnownLocations));
@@ -93,7 +102,7 @@ customDetails:
   FirstObservedTime: FirstSeen
   LastObservedTime: LastSeen
   LogType: Category
-  CountryOfSignIn: Country
+  CountryOfSignIn: Location
   DirectoryMemberType: UserType
   UserAgents: UserAgents
   failureReason: Results

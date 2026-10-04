@@ -68,15 +68,6 @@ query: |
   | where ['Size Change %'] > 50
   | where LastWeekSize == 0 and ThisWeekSize > 0
   | where DataType in (newDataConnector)
-entityMappings:
-  - entityType: Account
-    fieldMappings:
-      - identifier: FullName
-        columnName: Caller
-  - entityType: IP
-    fieldMappings:
-      - identifier: Address
-        columnName: CallerIpAddress
 incidentConfiguration:
   createIncident: true
   groupingConfiguration:

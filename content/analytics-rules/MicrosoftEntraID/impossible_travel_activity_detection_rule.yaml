@@ -24,6 +24,15 @@ tactics:
 relevantTechniques:
   - T1098
 query: |
+  let SigninEvents = union isfuzzy=true
+      (SigninLogs
+      | extend ResultType = toint(ResultType)
+      , LocationDetails = parse_json(tostring(LocationDetails))
+      , DeviceDetail = parse_json(tostring(DeviceDetail)))
+      , (AADNonInteractiveUserSignInLogs
+      | extend ResultType = toint(ResultType)
+      , LocationDetails = parse_json(tostring(LocationDetails))
+      , DeviceDetail = parse_json(tostring(DeviceDetail)));
   let startDate = ago(1h);
   let endDate = now();
   let pevCount = 1;
@@ -42,13 +51,13 @@ query: |
       , "North Korea", "Paraguay", "Russia", "Russian Federation", "Sudan", "Switzerland", "Syria", "Thailand", "Turkmenistan"
       , "Uganda", "Ukraine", "Uzbekistan", "Venezuela", "Yemen", "Zimbabwe"]);
   let MatchedIPs = materialize(
-      UnifiedSignInLogs
+      SigninEvents
       | where TimeGenerated between (startDate .. endDate)
       | summarize by IPAddress
       | evaluate ipv4_lookup(AzureRanges, IPAddress, AddressPrefixes)
       | project IPAddress
   );
-  UnifiedSignInLogs
+  SigninEvents
   | where TimeGenerated between (startDate .. endDate)
   | where ResultType == 0
   | where isnotempty(tostring(LocationDetails.countryOrRegion))
@@ -126,7 +135,7 @@ suppressionDuration: PT5H
 suppressionEnabled: false
 customDetails:
   TravalRoutes: ImpossibleTravelRoutes
-  ImpossibleTravelCount: ImpossibleTravelRouteCount
+  TravelCount: ImpossibleTravelRouteCount
   HighRiskCount: HighRiskCountryCount
   CountryOfSignIn: Countries
   CountryCount: CountryCount

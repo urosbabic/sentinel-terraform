@@ -15,7 +15,7 @@ status: Available
 tactics:
   - Persistence
 relevantTechniques:
-  - T1078.004
+  - T1078
 tags:
   - AADSecOpsGuide
 query: |
